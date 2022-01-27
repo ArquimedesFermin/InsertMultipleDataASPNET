@@ -1,0 +1,223 @@
+﻿@model ResgisterMultiple.ViewModels.SucuDepa
+
+@{
+    ViewBag.Title = "Create";
+}
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        <h4>Insertar</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <div class="mb-3">
+            @Html.LabelFor(model => model.Sucursal, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div>
+                <select id="sltSucursal" class="form-select" aria-label="Default select example">
+                    <option value="N/A" selected>Select Sucursal</option>
+
+                    @foreach (var item in Model.Sucursals)
+                    {
+                        <option value=@item.id>@item.nameSucursals</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            @Html.LabelFor(model => model.Departament, htmlAttributes: new { @class = "control-label col-md-2" })
+            <select id="sltDepartament" class="form-select" aria-label="Default select example">
+                <option value="N/A" selected>Select Departament</option>
+
+                @foreach (var item in Model.Departamets)
+                {
+                    <option value=@item.id>@item.nameDepartaments</option>
+                }
+            </select>
+        </div>
+
+        <ul class="list-group" name="ul_geg" id="ul_geg">
+        </ul>
+
+        <div class="mb-3">
+            <button type="button" id="add" class="btn btn-primary">Add</button>
+        </div>
+
+        <div class="mb-3">
+            <button type="button" id="register" class="btn btn-primary">Register</button>
+        </div>
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+<div id="alert">
+</div>
+
+
+<script>
+    //Variables
+
+    let itemList = [];
+    let items = [];
+    let index = [];
+    let nIntervId = null;
+    let existsInDb = [];
+
+    //Events
+    $("#add").click(function () {
+        SendItemToList(false)
+    });
+
+    $('#register').click(function () {
+        Register();
+    });
+
+    //Method Action 
+    function Register() {
+        StopIntervelar();
+        if ($('#sltSucursal').val() !== "N/A" && $('#sltDepartament').val() !== "N/A") {
+            RegisterListAjax();
+        }
+        else {
+            TryOutAlert("Por favor, Seleccionar los valores");
+        }
+    }
+
+    function SendItemToList(isRemove)
+    {
+        StopIntervelar();
+        if ($('#sltSucursal').val() !== "N/A" && $('#sltDepartament').val() !== "N/A") {
+            if (isRemove){
+                UpdateListAjax(isRemove);
+            }
+            else if (!ExistsItemList($('#sltSucursal').val(), $('#sltDepartament').val())) {
+                UpdateListAjax(isRemove);
+            }
+        }
+        else {
+            TryOutAlert("Por favor, Seleccionar los valores");
+        }
+    }
+
+    function updateList(updated_gegs, isRemove) {
+        for (var i in updated_gegs) {
+            var item = updated_gegs[i];
+            ConditionList(item, isRemove);
+        }
+        $('#ul_geg').html(items.join(''));
+    }
+
+    //Ajax Methods
+    function RegisterListAjax()
+    {
+        if (itemList.length !== 0) {
+           if (existsInDb.indexOf(true) === -1) {
+              let JsonArray = JSON.stringify(itemList);
+               $.ajax({
+                   type: 'POST',
+                   url: '@Url.Action("Create","Maintenance")',
+                   data: '{itemList:' + JsonArray + '}',
+                   dataType: 'json',
+                   contentType: 'application/json; charset=utf-8',
+                   success: function (response) {
+                     window.location = '@Url.Action("index")';
+                   }
+               });
+           }
+           else {
+              TryOutAlert("En la lista hay registro que existen en el sistema");
+           }
+        }
+        else {
+           TryOutAlert("Por favor, Insertar registros en la lista");
+        }
+    }
+
+    function UpdateListAjax(isRemove)
+    {
+       if (!isRemove) { itemList.push({ idSucursal: $('#sltSucursal').val(), idDepartament: $('#sltDepartament').val() }); }
+         let JsonArray = JSON.stringify(itemList);
+         $.ajax({
+            type: 'POST',
+            url: '@Url.Action("SendDataUpdateList", "Maintenance")',
+            data: '{itemList:' + JsonArray + '}',
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            success: function (response) {
+               updateList(response, isRemove);
+            }
+         })
+    }
+
+    //Methods 
+    function deleteItemList(id) {
+        console.log(id);
+        let s = index.map(function (e) {
+            return e;
+        }).indexOf(id);
+        items = [];
+        index = [];
+        existsInDb = [];
+        itemList.splice(s, 1);
+        console.log(itemList);
+        SendItemToList(true);
+    }
+
+    function ExistsItemList(idSuculsal, idDepartament) {
+        let result = false;
+        itemList.map(function (e) {
+            result = e.idSucursal === idSuculsal && e.idDepartament === idDepartament;
+            return result;
+        });
+        return result;
+    }
+
+    function TryOutAlert(message) {
+        const htmlText = '';
+        $('#alert').html('<div class="alert alert-danger" role="alert">' + message + '</div>')
+        nIntervId = setInterval(() => { $('#alert').html(htmlText) }, 5000);
+    }
+
+    function StopIntervelar() {
+        clearInterval(nIntervId);
+        nIntervId = null;
+    }
+
+
+    function ConditionList(item,isRemove)
+    {
+        if (!isRemove) {
+            index.push(item[item.length - 1].Id);
+            if (item[item.length - 1].Exists) {
+                existsInDb.push(true);
+                items.push('<li class="list-group-item list-group-item-danger" id="' + item[item.length - 1].Id + '"> Sucursal: ' + item[item.length - 1].Sucursal + ' - Departament: ' + item[item.length - 1].Departament + ' <button type="button" onclick="deleteItemList(' + item[item.length - 1].Id + ')"  class="btn btn-danger">X</button></li> ');
+            }
+            else {
+                items.push('<li class="list-group-item" id="' + item[item.length - 1].Id + '"> Sucursal: ' + item[item.length - 1].Sucursal + ' - Departament: ' + item[item.length - 1].Departament + ' <button type="button" onclick="deleteItemList(' + item[item.length - 1].Id + ')"  class="btn btn-danger">X</button></li> ');
+            }
+        }
+        else {
+            item.forEach(function (item) {
+                index.push(item.Id);
+                if (item.Exists) {
+                    existsInDb.push(true);
+                    items.push('<li class="list-group-item list-group-item-danger" id="' + item.Id + '"> Sucursal: ' + item.Sucursal + ' - Departament: ' + item.Departament + ' <button type="button" onclick="deleteItemList(' + item.Id + ')"  class="btn btn-danger">X</button></li> ');
+                }
+                else {
+                    items.push('<li class="list-group-item" id="' + item.Id + '"> Sucursal: ' + item.Sucursal + ' - Departament: ' + item.Departament + ' <button type="button" onclick="deleteItemList(' + item.Id + ')"  class="btn btn-danger">X</button></li> ');
+                }
+            });
+        }
+    }
+
+</script>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
