@@ -4,64 +4,73 @@
     ViewBag.Title = "Create";
 }
 
-@using (Html.BeginForm(null, null, FormMethod.Post, new { id= "prospects_form"}))
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { @class = "needs-validation", novalidate = false }))
 {
     @Html.AntiForgeryToken()
 
-    <div class="form-horizontal">
-        <h4>Insertar</h4>
-        <hr />
+<div class="form-horizontal">
+    <h4>Insertar</h4>
+    <hr />
+    <div id="alert" style="position: relative;">
+    </div>
 
-        <div class="mb-3">
-            @Html.LabelFor(model => model.Sucursal, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div>
-                <select id="sltSucursal" class="form-select" aria-label="Default select example" required>
-                    <option value="" selected>Select Sucursal</option>
+    <div class="mb-3">
+        @Html.LabelFor(model => model.Sucursal, htmlAttributes: new { @for = "sltSucursal", @class = "control-label col-md-2" })
 
-                    @foreach (var item in Model.Sucursals)
-                    {
-                        <option value=@item.id>@item.nameSucursals</option>
-                    }
-                </select>
-            </div>
+        <select id="sltSucursal" class="form-select" aria-label="Default select example" required>
+            <option value="" selected>Select Sucursal</option>
+
+            @foreach (var item in Model.Sucursals)
+            {
+                <option value=@item.id>@item.nameSucursals</option>
+            }
+        </select>
+        <div class="invalid-feedback">
+            Por favor seleccione la sucursal
         </div>
 
-        <div class="mb-3">
-            @Html.LabelFor(model => model.Departament, htmlAttributes: new { @class = "control-label col-md-2" })
-            <select id="sltDepartament" class="form-select" aria-label="Default select example" required>
-                <option value="N/A" selected>Select Departament</option>
+    </div>
 
-                @foreach (var item in Model.Departamets)
-                {
-                    <option value=@item.id>@item.nameDepartaments</option>
-                }
-            </select>
-        </div>
+    <div class="mb-3">
+        @Html.LabelFor(model => model.Departament, htmlAttributes: new { @for = "sltDepartament", @class = "control-label col-md-2" })
+        <select id="sltDepartament" class="form-select" aria-label="Default select example" required>
+            <option value="" selected>Select Departament</option>
 
-        <ul class="list-group" name="ul_geg" id="ul_geg">
-        </ul>
-
-        <div class="mb-3">
-            <button type="button" id="add" class="btn btn-primary">Add</button>
-        </div>
-
-        <div class="mb-3">
-            <button type="submit" id="register" class="btn btn-primary">Register</button>
+            @foreach (var item in Model.Departamets)
+            {
+                <option value=@item.id>@item.nameDepartaments</option>
+            }
+        </select>
+        <div class="invalid-feedback">
+            Por favor seleccione el departamento
         </div>
     </div>
+    <div class="mb-3">
+        <ul class="list-group" name="ul_geg" id="ul_geg">
+        </ul>
+    </div>
+
+
+    <div class="mb-3">
+        <button type="button" id="add" class="btn btn-primary">Add</button>
+    </div>
+
+    <div class="mb-3">
+        <button type="submit" id="register" class="btn btn-primary">Register</button>
+    </div>
+</div>
 }
 
 <div>
     @Html.ActionLink("Back to List", "Index")
 </div>
 
-<div id="alert">
-</div>
 
 
 <script>
-    //Variables
 
+    //Variables
     let itemList = [];
     let items = [];
     let index = [];
@@ -77,10 +86,14 @@
         Register();
     });
 
-    //Method Action 
+    //Avoid reload page
+    $(".needs-validation").submit(function (e) {
+        e.preventDefault();
+    });
+
+    //Method Action
     function Register() {
-        StopIntervelar();
-        if ($('#sltSucursal').val() !== "N/A" && $('#sltDepartament').val() !== "N/A") {
+        if ($('#sltSucursal').val() !== "" && $('#sltDepartament').val() !== "") {
             RegisterListAjax();
         }
         else {
@@ -90,8 +103,7 @@
 
     function SendItemToList(isRemove)
     {
-        StopIntervelar();
-        if ($('#sltSucursal').val() !== "N/A" && $('#sltDepartament').val() !== "N/A") {
+        if ($('#sltSucursal').val() !== "" && $('#sltDepartament').val() !== "") {
             if (isRemove){
                 UpdateListAjax(isRemove);
             }
@@ -154,7 +166,7 @@
          })
     }
 
-    //Methods 
+    //Methods
     function deleteItemList(id) {
         console.log(id);
         let s = index.map(function (e) {
@@ -178,9 +190,9 @@
     }
 
     function TryOutAlert(message) {
-        const htmlText = '';
-        $('#alert').html('<div class="alert alert-danger" role="alert">' + message + '</div>')
-        nIntervId = setInterval(() => { $('#alert').html(htmlText) }, 5000);
+      
+        $('#alert').html('<div class="alert alert-danger" role="alert" style="text-align-last: center;font-size: 15px;position: absolute;z-index: 10;left: 77%;width: 23%;">' + message + '</div>')
+        nIntervId = setInterval(() => { ClearAlert() }, 5000);
     }
 
     function StopIntervelar() {
@@ -188,6 +200,12 @@
         nIntervId = null;
     }
 
+    function ClearAlert()
+    {
+        const htmlText = '';
+        $('#alert').html(htmlText);
+        StopIntervelar();
+    }
 
     function ConditionList(item,isRemove)
     {
@@ -195,10 +213,10 @@
             index.push(item[item.length - 1].Id);
             if (item[item.length - 1].Exists) {
                 existsInDb.push(true);
-                items.push('<li class="list-group-item list-group-item-danger" id="' + item[item.length - 1].Id + '"> Sucursal: ' + item[item.length - 1].Sucursal + ' - Departament: ' + item[item.length - 1].Departament + ' <button type="button" onclick="deleteItemList(' + item[item.length - 1].Id + ')"  class="btn btn-danger">X</button></li> ');
+                items.push('<div style="display: flex;margin-top: 6px;"><li class="list-group-item list-group-item-danger" style="width:37%;" id="' + item[item.length - 1].Id + '"> Sucursal: ' + item[item.length - 1].Sucursal + ' - Departament: ' + item[item.length - 1].Departament + '</li> <button type="button" onclick="deleteItemList(' + item[item.length - 1].Id + ')"  class="btn btn-danger" style="margin-left:4px;">X</button></div>'  );
             }
             else {
-                items.push('<li class="list-group-item" id="' + item[item.length - 1].Id + '"> Sucursal: ' + item[item.length - 1].Sucursal + ' - Departament: ' + item[item.length - 1].Departament + ' <button type="button" onclick="deleteItemList(' + item[item.length - 1].Id + ')"  class="btn btn-danger">X</button></li> ');
+                items.push('<div style="display: flex;margin-top: 6px;"><li class="list-group-item" style="width:37%;" id="' + item[item.length - 1].Id + '"> Sucursal: ' + item[item.length - 1].Sucursal + ' - Departament: ' + item[item.length - 1].Departament + '</li><button type="button" onclick="deleteItemList(' + item[item.length - 1].Id + ')"  class="btn btn-danger" style="margin-left:4px;">X</button></div>');
             }
         }
         else {
@@ -206,18 +224,31 @@
                 index.push(item.Id);
                 if (item.Exists) {
                     existsInDb.push(true);
-                    items.push('<li class="list-group-item list-group-item-danger" id="' + item.Id + '"> Sucursal: ' + item.Sucursal + ' - Departament: ' + item.Departament + ' <button type="button" onclick="deleteItemList(' + item.Id + ')"  class="btn btn-danger">X</button></li> ');
+                    items.push('<div style="display: flex;margin-top: 6px;"><li class="list-group-item list-group-item-danger" style="width:37%;" id="' + item.Id + '"> Sucursal: ' + item.Sucursal + ' - Departament: ' + item.Departament + '</li><button type="button" onclick="deleteItemList(' + item.Id + ')"  class="btn btn-danger" style="margin-left:4px;">X</button></div>');
                 }
                 else {
-                    items.push('<li class="list-group-item" id="' + item.Id + '"> Sucursal: ' + item.Sucursal + ' - Departament: ' + item.Departament + ' <button type="button" onclick="deleteItemList(' + item.Id + ')"  class="btn btn-danger">X</button></li> ');
+                    items.push('<div style="display: flex;margin-top: 6px;"><li class="list-group-item" style="width:37%;" id="' + item.Id + '"> Sucursal: ' + item.Sucursal + ' - Departament: ' + item.Departament + '</li><button type="button" onclick="deleteItemList(' + item.Id + ')" class="btn btn-danger" style="margin-left:4px;">X</button></div>' );
                 }
             });
         }
     }
 
-    $("#prospects_form").submit(function (e) {
-        e.preventDefault();
-    });
+    //Validation
+    (function () {
+        'use strict'
+        var forms = document.querySelectorAll('.needs-validation')
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+
+                    form.classList.add('was-validated')
+                }, false)
+            })
+    })()
 
 </script>
 
