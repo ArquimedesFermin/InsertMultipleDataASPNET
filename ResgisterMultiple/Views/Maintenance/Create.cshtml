@@ -4,20 +4,19 @@
     ViewBag.Title = "Create";
 }
 
-@using (Html.BeginForm())
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id= "prospects_form"}))
 {
     @Html.AntiForgeryToken()
 
     <div class="form-horizontal">
         <h4>Insertar</h4>
         <hr />
-        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
         <div class="mb-3">
             @Html.LabelFor(model => model.Sucursal, htmlAttributes: new { @class = "control-label col-md-2" })
             <div>
-                <select id="sltSucursal" class="form-select" aria-label="Default select example">
-                    <option value="N/A" selected>Select Sucursal</option>
+                <select id="sltSucursal" class="form-select" aria-label="Default select example" required>
+                    <option value="" selected>Select Sucursal</option>
 
                     @foreach (var item in Model.Sucursals)
                     {
@@ -29,7 +28,7 @@
 
         <div class="mb-3">
             @Html.LabelFor(model => model.Departament, htmlAttributes: new { @class = "control-label col-md-2" })
-            <select id="sltDepartament" class="form-select" aria-label="Default select example">
+            <select id="sltDepartament" class="form-select" aria-label="Default select example" required>
                 <option value="N/A" selected>Select Departament</option>
 
                 @foreach (var item in Model.Departamets)
@@ -47,7 +46,7 @@
         </div>
 
         <div class="mb-3">
-            <button type="button" id="register" class="btn btn-primary">Register</button>
+            <button type="submit" id="register" class="btn btn-primary">Register</button>
         </div>
     </div>
 }
@@ -215,6 +214,10 @@
             });
         }
     }
+
+    $("#prospects_form").submit(function (e) {
+        e.preventDefault();
+    });
 
 </script>
 
