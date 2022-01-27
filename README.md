@@ -1,3 +1,3 @@
 
-# From form, Insert multiple data in db :Asp.Net 
+# From form, Insert multiple data in db, Asp.Net.
 
